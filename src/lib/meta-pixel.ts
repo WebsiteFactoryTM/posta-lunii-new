@@ -55,6 +55,10 @@ export function enableMetaPixel() {
   }
 
   w.fbq('consent', 'grant')
+  // Fără colectare automată (butoane, microdate/JSON-LD din pagină): trimitem doar
+  // evenimentele noastre. Altfel pixelul atașează datele structurate ale paginii
+  // și trimite evenimentele printr-un POST într-un iframe ascuns, greu de verificat.
+  w.fbq('set', 'autoConfig', false, META_PIXEL_ID)
   w.fbq('init', META_PIXEL_ID)
   // PageView pentru pagina pe care s-a dat acordul (sau pe care s-a încărcat site-ul).
   w.fbq('track', 'PageView')
