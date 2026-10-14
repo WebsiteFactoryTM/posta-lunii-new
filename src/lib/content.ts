@@ -155,7 +155,7 @@ export const defaultLanding: LandingContent = {
     donationAmount: '15 lei',
     donationAfter: 'din fiecare plic cumpărat merg către Adăpostul Speranța.',
     ctaLabel: 'Vreau Poșta Lunii',
-    ctaNote: 'de la 55 lei / lună · livrat prin poștă',
+    ctaNote: 'de la 55 lei / lună · livrare inclusă prin Poșta Română',
   },
   envelope: {
     eyebrow: 'Ediția fiecărei luni',
@@ -206,7 +206,7 @@ export const defaultLanding: LandingContent = {
         name: '🌙 O lună',
         price: '60 lei',
         priceSuffix: '',
-        description: 'Primești ediția lunii următoare, livrată prin poștă.',
+        description: 'Primești ediția lunii următoare, livrată prin Poșta Română, fără cost de transport.',
         ctaLabel: 'Cumpără plicul de luna viitoare',
         checkoutUrl: 'https://buy.stripe.com/14A28q4RX0vn7B6bBc3Ru00',
         featured: false,
@@ -261,7 +261,12 @@ export const defaultLanding: LandingContent = {
       {
         question: 'Cum ajunge plicul la mine?',
         answer:
-          'Plicul este livrat prin poștă, la adresa completată la comandă. Nu ai nevoie de nimic altceva: doar deschizi cutia poștală.',
+          'Plicul vine prin Poșta Română, direct în cutia poștală, la adresa completată la plată. Livrarea e inclusă în preț. Ca să ajungă fără probleme, scrie adresa completă: stradă, număr, bloc, scară, etaj, apartament, localitate, județ și cod poștal.',
+      },
+      {
+        question: 'Livrați și în afara României? Pot face cadou?',
+        answer:
+          'Livrăm doar în România. Dacă Poșta Lunii e un cadou, completează la plată adresa persoanei care primește plicul.',
       },
       {
         question: 'Cât din preț merge la adăpost?',

@@ -12,6 +12,7 @@ import { Closing } from '@/components/Closing'
 import { Footer } from '@/components/Footer'
 
 import { getLanding, getNavigation, getSettings } from '@/lib/payload-content'
+import { orderDeadline } from '@/lib/order-deadline'
 import { buildJsonLd } from '@/lib/schema'
 
 export const revalidate = 300
@@ -24,6 +25,8 @@ export default async function HomePage() {
   ])
 
   const jsonLd = buildJsonLd(landing, settings)
+  // Calculat la fiecare regenerare a paginii (revalidate = 5 min), deci se schimbă singur la început de lună.
+  const deadline = orderDeadline()
 
   return (
     <>
@@ -41,7 +44,7 @@ export default async function HomePage() {
           note={landing.footer.baseNote}
         />
 
-        <Hero hero={landing.hero} siteName={settings.siteName} ctaHref={navigation.ctaHref} />
+        <Hero hero={landing.hero} siteName={settings.siteName} ctaHref={navigation.ctaHref} deadline={deadline.short} />
 
         <Image
           className="pl-phases"
@@ -56,7 +59,7 @@ export default async function HomePage() {
         <EnvelopeItems envelope={landing.envelope} />
         <About about={landing.about} />
         <Donation donation={landing.donation} />
-        <Pricing pricing={landing.pricing} />
+        <Pricing pricing={landing.pricing} deadline={deadline} />
         <Faq faq={landing.faq} />
         <Closing closing={landing.closing} ctaHref={navigation.ctaHref} />
         <Footer footer={landing.footer} instagramUrl={settings.instagramUrl} />

@@ -6,9 +6,11 @@ type Props = {
   hero: LandingContent['hero']
   siteName: string
   ctaHref: string
+  /** Termenul de comandă, varianta scurtă (vezi `orderDeadline`). */
+  deadline: string
 }
 
-export function Hero({ hero, siteName, ctaHref }: Props) {
+export function Hero({ hero, siteName, ctaHref, deadline }: Props) {
   return (
     <section className="pl-hero pl-grain" aria-labelledby="hero-title">
       <Stars field="hero" />
@@ -80,7 +82,10 @@ export function Hero({ hero, siteName, ctaHref }: Props) {
                 →
               </span>
             </a>
-            <span className="pl-hero__note">{hero.ctaNote}</span>
+            <span className="pl-hero__note">
+              {hero.ctaNote}
+              <span className="pl-hero__deadline">{deadline}</span>
+            </span>
           </div>
         </div>
       </div>
