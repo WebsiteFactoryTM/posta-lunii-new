@@ -90,7 +90,7 @@ export function purchaseInfo(session: CheckoutSession): PurchaseInfo {
   const variant = ref?.variant ?? variantFromAmount(value)
   return {
     // Legat de comandă: aceeași sesiune Stripe → același event_id → Meta deduplică.
-    eventId: `purchase_${session.id}`,
+    eventId: session.id,
     value,
     currency: (session.currency ?? 'ron').toUpperCase(),
     variant,
