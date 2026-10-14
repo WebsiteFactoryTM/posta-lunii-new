@@ -29,7 +29,7 @@ export const CONSENT_MAX_AGE_DAYS = 180
 
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-G5E9T34WP3'
 
-export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '1367442525463905'
+export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '1441607221249526'
 
 export const LEGAL_LINKS = [
   { href: '/termeni-si-conditii', label: 'Termeni și condiții' },
