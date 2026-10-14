@@ -8,6 +8,7 @@ const config = [
       'node_modules/**',
       'src/app/(payload)/admin/importMap.js',
       'src/payload-types.ts',
+      'src/migrations/**',
     ],
   },
   ...nextCoreWebVitals,

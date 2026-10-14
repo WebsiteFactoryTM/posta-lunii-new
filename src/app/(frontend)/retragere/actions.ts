@@ -4,7 +4,9 @@ import { randomBytes } from 'crypto'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import { ADMIN_EMAIL, formatDateTime, withdrawalAdminEmail, withdrawalCustomerEmail } from '@/lib/email'
 import { COMPANY } from '@/lib/legal'
+import { absoluteUrl } from '@/lib/site'
 
 export type WithdrawalState =
   | { status: 'idle' }
@@ -24,20 +26,9 @@ type Product = keyof typeof PRODUCTS
 const text = (value: FormDataEntryValue | null, max: number) =>
   typeof value === 'string' ? value.trim().slice(0, max) : ''
 
-const escapeHtml = (value: string) =>
-  value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat('ro-RO', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-    timeZone: 'Europe/Bucharest',
-  }).format(date)
-}
-
 /**
  * Înregistrează declarația de retragere, trimite confirmarea pe email
- * (dacă SMTP e configurat) și întoarce numărul de înregistrare.
+ * (prin Resend, dacă e configurat) și întoarce numărul de înregistrare.
  */
 export async function submitWithdrawal(_prev: WithdrawalState, formData: FormData): Promise<WithdrawalState> {
   // Câmp-capcană pentru roboți: oamenii nu îl văd și nu îl completează.
@@ -70,41 +61,22 @@ export async function submitWithdrawal(_prev: WithdrawalState, formData: FormDat
       data: { reference, name, email, product, contract, address, message, status: 'new' },
     })
 
-    const when = formatDate(now)
-    const rows = [
-      ['Număr de înregistrare', reference],
-      ['Primită la', when],
-      ['Nume', name],
-      ['Email', email],
-      ['Produs', PRODUCTS[product]],
-      ['Identificarea comenzii', contract],
-      ...(address ? [['Adresa de livrare', address]] : []),
-      ...(message ? [['Mențiuni', message]] : []),
-    ]
-    const table = rows
-      .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#5b5561">${label}</td><td style="padding:4px 0">${escapeHtml(value).replace(/\n/g, '<br>')}</td></tr>`)
-      .join('')
+    const when = formatDateTime(now)
+    const emailData = {
+      reference,
+      submittedAt: when,
+      name,
+      email,
+      productLabel: PRODUCTS[product],
+      contract,
+      address: address || undefined,
+      message: message || undefined,
+    }
 
     let emailSent = false
-    if (process.env.SMTP_HOST) {
+    if (process.env.RESEND_API_KEY) {
       try {
-        await payload.sendEmail({
-          to: email,
-          replyTo: COMPANY.email,
-          subject: `Confirmare retragere din contract — ${reference}`,
-          html: `<p>Bună, ${escapeHtml(name)},</p>
-<p>Am primit declarația ta de retragere din contract. Acest email este confirmarea de primire.</p>
-<table>${table}</table>
-<p>Îți returnăm toate sumele primite pentru produsele la care te-ai retras, cu aceeași metodă de plată, în cel mult 14 zile de la data de mai sus. Dacă ai primit deja plicuri, te rugăm să le trimiți înapoi în cel mult 14 zile; îți scriem adresa de retur.</p>
-<p>Pentru orice întrebare, răspunde la acest email sau scrie-ne la ${COMPANY.email}.</p>
-<p>Cu drag,<br>Poșta Lunii<br><small>${COMPANY.name} · CUI ${COMPANY.cui} · ${COMPANY.address}</small></p>`,
-        })
-        await payload.sendEmail({
-          to: COMPANY.email,
-          replyTo: email,
-          subject: `[Poșta Lunii] Retragere nouă din contract — ${reference}`,
-          html: `<p>A fost trimisă o declarație de retragere prin site.</p><table>${table}</table>`,
-        })
+        await payload.sendEmail({ to: email, replyTo: COMPANY.email, ...withdrawalCustomerEmail(emailData) })
         emailSent = true
         await payload.update({
           collection: 'withdrawals',
@@ -115,8 +87,14 @@ export async function submitWithdrawal(_prev: WithdrawalState, formData: FormDat
       } catch (error) {
         payload.logger.error({ err: error }, `[posta-lunii] confirmarea retragerii ${reference} nu a putut fi trimisă`)
       }
+      try {
+        const adminUrl = absoluteUrl(`/admin/collections/withdrawals/${doc.id}`)
+        await payload.sendEmail({ to: ADMIN_EMAIL, replyTo: email, ...withdrawalAdminEmail(emailData, adminUrl) })
+      } catch (error) {
+        payload.logger.error({ err: error }, `[posta-lunii] notificarea pentru retragerea ${reference} nu a plecat`)
+      }
     } else {
-      payload.logger.warn(`[posta-lunii] retragere ${reference} înregistrată; SMTP neconfigurat — emailul de confirmare nu a plecat.`)
+      payload.logger.warn(`[posta-lunii] retragere ${reference} înregistrată; RESEND_API_KEY lipsește — emailurile nu au plecat.`)
     }
 
     return { status: 'done', reference, submittedAt: when, emailSent, email }

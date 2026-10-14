@@ -1,15 +1,17 @@
 import { sendPurchaseToMeta } from '@/lib/meta-capi'
+import { recordOrder } from '@/lib/orders'
 import { isPaid, purchaseInfo, verifyStripeEvent, type CheckoutSession } from '@/lib/stripe'
 
 /**
- * Webhook Stripe → Meta Conversions API (Purchase).
+ * Webhook Stripe: comanda nouă în admin + emailuri (client și administrator) +
+ * Purchase la Meta prin Conversions API.
  *
  * Ascultăm DOAR evenimentele de checkout: o sesiune de checkout înseamnă o
  * comandă nouă, deci prima plată. Reînnoirile lunare ale abonamentelor vin ca
  * `invoice.paid` / `invoice.payment_succeeded` și sunt ignorate intenționat —
- * nu sunt raportate ca Purchase.
+ * nu creează comenzi și nu sunt raportate ca Purchase.
  *
- * În Stripe: Developers → Webhooks → endpoint https://postalunii.ro/webhooks/stripe,
+ * În Stripe: Developers → Webhooks → endpoint https://www.postalunii.ro/webhooks/stripe,
  * cu evenimentele `checkout.session.completed` și `checkout.session.async_payment_succeeded`.
  */
 
@@ -31,26 +33,34 @@ export async function POST(request: Request) {
   if (!PURCHASE_EVENTS.has(event.type)) return json({ received: true, ignored: event.type })
 
   const session = event.data.object as CheckoutSession
-  // Plățile cu confirmare întârziată ajung „complete” dar „unpaid”; Purchase pleacă
-  // la `checkout.session.async_payment_succeeded`, când banii sunt încasați.
+  // Plățile cu confirmare întârziată ajung „complete” dar „unpaid”; comanda se
+  // înregistrează la `checkout.session.async_payment_succeeded`, când banii sunt încasați.
   if (!isPaid(session)) return json({ received: true, skipped: 'not paid yet' })
 
   const info = purchaseInfo(session)
 
-  // Datele clientului ajung la Meta doar dacă a acceptat cookie-urile de marketing
-  // pe site (informația vine din client_reference_id, pus la click pe „Comandă”).
+  // 1. Comanda + emailurile. Dacă baza de date nu răspunde, 500 → Stripe reîncearcă;
+  //    o comandă deja înregistrată nu se dublează și nu retrimite emailurile.
+  let order: Awaited<ReturnType<typeof recordOrder>>
+  try {
+    order = await recordOrder(session, info)
+  } catch (error) {
+    console.error(`[posta-lunii] comanda pentru ${session.id} nu a putut fi înregistrată`, error)
+    return json({ error: 'order failed' }, 500)
+  }
+
+  // 2. Meta Conversions API — doar dacă clientul a acceptat cookie-urile de marketing
+  //    pe site (informația vine din client_reference_id, pus la click pe „Comandă”).
   if (!info.ref?.marketing) {
-    console.info(`[posta-lunii] Purchase ${info.eventId} netrimis la Meta: fără acord de marketing.`)
-    return json({ received: true, skipped: 'no marketing consent' })
+    return json({ received: true, order: order.created ? 'created' : 'exists', meta: 'skipped: no marketing consent' })
   }
 
   try {
     const result = await sendPurchaseToMeta(session, info)
     if (!result.sent) console.warn(`[posta-lunii] Purchase ${info.eventId} netrimis la Meta: ${result.reason}`)
-    else console.info(`[posta-lunii] Purchase ${info.eventId} trimis la Meta (${info.value} ${info.currency}, ${info.contentName}).`)
-    return json({ received: true, meta: result.sent })
+    return json({ received: true, order: order.created ? 'created' : 'exists', meta: result.sent })
   } catch (error) {
-    // 500 → Stripe reîncearcă; Meta deduplică după event_id, deci nu se dublează.
+    // 500 → Stripe reîncearcă; Meta deduplică după event_id, iar comanda nu se dublează.
     console.error(`[posta-lunii] Purchase ${info.eventId}: eroare Meta CAPI`, error)
     return json({ error: 'meta capi failed' }, 500)
   }

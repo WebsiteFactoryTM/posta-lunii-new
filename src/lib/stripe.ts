@@ -8,6 +8,9 @@ import { decodeCheckoutRef, VARIANTS, variantFromAmount, type CheckoutRef, type 
  */
 
 type Address = {
+  line1?: string | null
+  line2?: string | null
+  state?: string | null
   city?: string | null
   postal_code?: string | null
   country?: string | null
@@ -24,6 +27,8 @@ export type CheckoutSession = {
   currency: string | null
   client_reference_id: string | null
   livemode: boolean
+  customer?: string | null
+  subscription?: string | null
   customer_details?: {
     email?: string | null
     name?: string | null

@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    orders: Order;
     withdrawals: Withdrawal;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -79,6 +80,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
     withdrawals: WithdrawalsSelect<false> | WithdrawalsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -204,6 +206,33 @@ export interface Media {
   };
 }
 /**
+ * Comenzi noi primite prin Stripe. Plățile lunare următoare ale abonamentelor se văd în Stripe.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  reference: string;
+  status?: ('new' | 'active' | 'done' | 'cancelled') | null;
+  variant?: ('lunar' | 'anual-recurent' | 'anual-integral') | null;
+  amount?: number | null;
+  currency?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  shippingAddress?: string | null;
+  notes?: string | null;
+  stripeSessionId: string;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  livemode?: boolean | null;
+  customerEmailSent?: boolean | null;
+  adminEmailSent?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Declarații trimise prin funcția „Retrage-te din contract aici”. Rambursarea se face în cel mult 14 zile de la primire.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -255,6 +284,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
       } | null)
     | ({
         relationTo: 'withdrawals';
@@ -378,6 +411,30 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  reference?: T;
+  status?: T;
+  variant?: T;
+  amount?: T;
+  currency?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  shippingAddress?: T;
+  notes?: T;
+  stripeSessionId?: T;
+  stripeCustomerId?: T;
+  stripeSubscriptionId?: T;
+  livemode?: T;
+  customerEmailSent?: T;
+  adminEmailSent?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -90,9 +90,13 @@ Dacă adaugi cookie-uri opționale noi, crește `CONSENT_VERSION` și actualizea
 politica de cookie-uri.
 
 **Retragerea din contract:** cererea se salvează în admin și primește un număr de
-înregistrare. Confirmarea pe email pleacă doar dacă e configurat SMTP
-(`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` — vezi
-`.env.example`).
+înregistrare. Clientul primește confirmarea pe email, iar administratorul o
+notificare (prin Resend, `RESEND_API_KEY`).
+
+**Comenzile:** webhook-ul Stripe (`/webhooks/stripe`) salvează fiecare comandă
+nouă în admin (Comenzi) și trimite emailurile de confirmare către client și de
+notificare către administrator. Plățile lunare următoare ale abonamentelor nu
+creează comenzi noi. Șabloanele emailurilor sunt în `src/lib/email.ts`.
 
 Când schimbi un text legal, actualizează `LEGAL_UPDATED` din `src/lib/legal.ts`.
 
@@ -161,9 +165,11 @@ de fișierele de 150–170 KB.
 axele SOFT, WONK, opsz; Instrument Sans; Caveat). Zero cereri către
 `fonts.googleapis.com`, fără CLS.
 
-**Baza de date este SQLite**, un singur fișier, zero configurare locală. Pentru
-producție se schimbă doar `DATABASE_URI` către libSQL/Turso (`libsql://…` plus
-`DATABASE_AUTH_TOKEN`) — restul configurației rămâne neschimbat.
+**Baza de date este Postgres** (Neon, conectat din Vercel prin `DATABASE_URL`).
+Schema se schimbă prin migrări: după ce modifici o colecție sau un global, rulează
+`pnpm payload migrate:create nume` și pune fișierul nou din `src/migrations` în
+commit. `pnpm build` (deci și deploy-ul din Vercel) rulează întâi migrările. Local, `vercel env pull`
+aduce `DATABASE_URL` (atenție: e aceeași bază ca în producție).
 
 ---
 
@@ -195,8 +201,9 @@ Pentru staging există bifa **Blochează indexarea** în Setări → SEO: pune
 4. Parola contului de admin schimbată.
 5. Verifică linkul de Instagram (în brief era marcat „de verificat”).
 6. Ia în calcul activarea secțiunii de întrebări.
-7. SMTP în variabilele de mediu (`SMTP_*`) — pentru confirmarea retragerilor din
-   contract și resetarea parolei de admin.
+7. `RESEND_API_KEY` și domeniul expeditorului verificat în Resend (`EMAIL_FROM`,
+   implicit `contact@postalunii.ro`) — pentru emailurile de comandă, retragere și
+   resetarea parolei de admin. Notificările ajung la `ADMIN_EMAIL`.
 8. În Stripe (Settings → Public details / Checkout): URL-urile Termenilor și ale
    Politicii de confidențialitate, plus bifa „Require customers to accept your
    terms of service” pe fiecare Payment Link.
