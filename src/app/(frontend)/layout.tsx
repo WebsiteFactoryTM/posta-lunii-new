@@ -3,6 +3,7 @@ import { Caveat, Fraunces, Instrument_Sans } from 'next/font/google'
 import Script from 'next/script'
 
 import { CookieConsent } from '@/components/CookieConsent'
+import { MetaPageViews } from '@/components/MetaPixelEvents'
 import { Motion } from '@/components/Motion'
 import { consentDefaultScript } from '@/lib/consent'
 import { getSettings } from '@/lib/payload-content'
@@ -141,6 +142,7 @@ export default function FrontendLayout({ children }: { children: React.ReactNode
         {children}
         <Motion />
         <CookieConsent />
+        <MetaPageViews />
       </body>
     </html>
   )

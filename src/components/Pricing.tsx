@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import Image from 'next/image'
 import type { LandingContent } from '@/lib/content'
+import { PricingViewContent } from './MetaPixelEvents'
 import { PlanCheckout } from './PlanCheckout'
 import { TermsGate } from './TermsConsent'
 
@@ -73,6 +74,7 @@ export function Pricing({ pricing }: Props) {
           <Image src="/assets/paw.webp" alt="" width={400} height={395} sizes="26px" />
           {pricing.note}
         </p>
+        <PricingViewContent sectionId="preturi" />
       </div>
     </section>
   )

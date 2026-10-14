@@ -21,7 +21,7 @@ export default function CookiesPage() {
       intro={
         <p>
           Folosim cât mai puține cookie-uri. Cele strict necesare funcționează mereu; cele de statistică (Google Analytics)
-          se activează doar dacă le accepți.
+          și cele de marketing (Meta Pixel) se activează doar dacă le accepți.
         </p>
       }
     >
@@ -123,6 +123,54 @@ export default function CookiesPage() {
           .
         </p>
 
+        <h3>Marketing — doar cu acordul tău</h3>
+        <p>
+          Folosim Meta Pixel (furnizat de Meta Platforms Ireland Limited) ca să măsurăm dacă reclamele noastre de pe
+          Facebook și Instagram aduc vizite și comenzi și ca să le arătăm oamenilor interesați. Scriptul Meta nu se
+          încarcă deloc până nu accepți cookie-urile de marketing. Cu acordul tău, pixelul transmite către Meta paginile
+          vizitate și acțiunile de pe site (vizualizarea prețurilor, începerea unei comenzi, cumpărarea). Detalii despre
+          datele transmise, inclusiv la confirmarea plății, găsești în{' '}
+          <Link href="/politica-de-confidentialitate">Politica de confidențialitate</Link>.
+        </p>
+        <div className="pl-legal__table-wrap">
+          <table className="pl-legal__table">
+            <thead>
+              <tr>
+                <th scope="col">Nume</th>
+                <th scope="col">Furnizor</th>
+                <th scope="col">Scop</th>
+                <th scope="col">Durată</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>_fbp</code>
+                </td>
+                <td>Meta</td>
+                <td>Deosebește browserele între ele, ca vizitele și comenzile să poată fi atribuite reclamelor.</td>
+                <td>90 de zile</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>_fbc</code>
+                </td>
+                <td>Meta</td>
+                <td>Reține că ai ajuns pe site dintr-o reclamă Facebook sau Instagram (identificatorul clicului).</td>
+                <td>90 de zile</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Datele pot fi transferate în SUA, pe baza Cadrului UE-SUA privind protecția datelor și a clauzelor contractuale
+          standard. Detalii:{' '}
+          <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener">
+            politica de confidențialitate Meta
+          </a>
+          .
+        </p>
+
         <h3>Pagina de plată Stripe</h3>
         <p>
           Când apeși un buton de comandă, ești dus pe pagina de plată Stripe (buy.stripe.com). Acolo, Stripe folosește
@@ -136,14 +184,16 @@ export default function CookiesPage() {
 
       <LegalSection id="control" title="3. Cum îți schimbi alegerea">
         <p>
-          La prima vizită îți arătăm un banner în care poți accepta sau refuza cookie-urile de statistică — ambele variante
+          La prima vizită îți arătăm un banner în care poți accepta sau refuza cookie-urile de statistică și pe cele de
+          marketing — ambele variante
           sunt la fel de ușor de ales. Îți poți schimba oricând decizia:
         </p>
         <p>
           <CookieSettingsButton />
         </p>
         <p>
-          Dacă îți retragi acordul, oprim Google Analytics și ștergem cookie-urile <code>_ga</code> de pe acest site. Poți
+          Dacă îți retragi acordul, oprim Google Analytics, respectiv Meta Pixel, și ștergem cookie-urile{' '}
+          <code>_ga</code>, respectiv <code>_fbp</code> și <code>_fbc</code>, de pe acest site. Poți
           șterge sau bloca oricând cookie-urile și din setările browserului; în acest caz bannerul va apărea din nou la
           următoarea vizită. Poți folosi și{' '}
           <a href="https://tools.google.com/dlpage/gaoptout?hl=ro" target="_blank" rel="noopener">

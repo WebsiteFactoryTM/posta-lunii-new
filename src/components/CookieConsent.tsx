@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 
 import { CONSENT_COOKIE, CONSENT_MAX_AGE_DAYS, CONSENT_VERSION, GA_MEASUREMENT_ID } from '@/lib/legal'
+import { disableMetaPixel, enableMetaPixel } from '@/lib/meta-pixel'
 
 /**
- * Bannerul de consimțământ pentru cookie-uri + încărcarea Google Analytics 4.
+ * Bannerul de consimțământ pentru cookie-uri + încărcarea Google Analytics 4 și
+ * a Meta Pixel.
  *
  * - Google Consent Mode v2 pornește cu totul pe „denied” (scriptul inline din
  *   layout, `consentDefaultScript`), înainte de orice tag Google.
@@ -15,12 +17,14 @@ import { CONSENT_COOKIE, CONSENT_MAX_AGE_DAYS, CONSENT_VERSION, GA_MEASUREMENT_I
  * - „Refuz” are aceeași greutate vizuală ca „Accept”, alegerea se poate schimba
  *   oricând din footer („Setări cookie”), iar retragerea acordului șterge
  *   cookie-urile _ga.
+ * - Meta Pixel (fbevents.js) se încarcă DOAR după acordul pentru marketing;
+ *   retragerea acordului oprește pixelul și șterge cookie-urile _fbp / _fbc.
  */
 
 const OPEN_EVENT = 'pl:open-consent'
 const CHANGE_EVENT = 'pl:consent-change'
 
-type Consent = { v: number; analytics: boolean; ts: string }
+type Consent = { v: number; analytics: boolean; marketing: boolean; ts: string }
 
 type GtagWindow = Window & {
   dataLayer?: unknown[]
@@ -34,14 +38,19 @@ function parseConsent(raw: string): Consent | null {
   if (!raw) return null
   try {
     const parsed = JSON.parse(decodeURIComponent(raw)) as Partial<Consent>
-    if (parsed.v !== CONSENT_VERSION || typeof parsed.analytics !== 'boolean') return null
-    return { v: parsed.v, analytics: parsed.analytics, ts: String(parsed.ts ?? '') }
+    if (parsed.v !== CONSENT_VERSION || typeof parsed.analytics !== 'boolean' || typeof parsed.marketing !== 'boolean') {
+      return null
+    }
+    return { v: parsed.v, analytics: parsed.analytics, marketing: parsed.marketing, ts: String(parsed.ts ?? '') }
   } catch {
     return null
   }
 }
 
 const readConsent = () => parseConsent(readRawConsent())
+
+/** A acceptat vizitatorul cookie-urile de marketing (Meta Pixel)? */
+export const hasMarketingConsent = () => readConsent()?.marketing === true
 
 // Cookie-ul de consimțământ ca „store” extern: pe server nu există (null), în
 // browser se recitește la fiecare schimbare anunțată prin CHANGE_EVENT.
@@ -51,8 +60,8 @@ const subscribeConsent = (onChange: () => void) => {
 }
 const getServerRawConsent = () => null
 
-function writeConsent(analytics: boolean): Consent {
-  const consent: Consent = { v: CONSENT_VERSION, analytics, ts: new Date().toISOString() }
+function writeConsent(analytics: boolean, marketing: boolean): Consent {
+  const consent: Consent = { v: CONSENT_VERSION, analytics, marketing, ts: new Date().toISOString() }
   const secure = location.protocol === 'https:' ? '; Secure' : ''
   document.cookie = `${CONSENT_COOKIE}=${encodeURIComponent(JSON.stringify(consent))}; Max-Age=${
     CONSENT_MAX_AGE_DAYS * 24 * 60 * 60
@@ -109,6 +118,7 @@ export function CookieConsent() {
   const [reopened, setReopened] = useState(false)
   const [showPrefs, setShowPrefs] = useState(false)
   const [analytics, setAnalytics] = useState(false)
+  const [marketing, setMarketing] = useState(false)
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -120,8 +130,14 @@ export function CookieConsent() {
   }, [consent?.analytics])
 
   useEffect(() => {
+    if (consent?.marketing) enableMetaPixel()
+  }, [consent?.marketing])
+
+  useEffect(() => {
     const reopen = () => {
-      setAnalytics(readConsent()?.analytics ?? false)
+      const current = readConsent()
+      setAnalytics(current?.analytics ?? false)
+      setMarketing(current?.marketing ?? false)
       setShowPrefs(true)
       setReopened(true)
       requestAnimationFrame(() => panelRef.current?.focus())
@@ -130,13 +146,16 @@ export function CookieConsent() {
     return () => window.removeEventListener(OPEN_EVENT, reopen)
   }, [])
 
-  const save = useCallback((allowAnalytics: boolean) => {
+  const save = useCallback((allowAnalytics: boolean, allowMarketing: boolean) => {
     const previous = readConsent()
-    writeConsent(allowAnalytics)
+    writeConsent(allowAnalytics, allowMarketing)
     setAnalytics(allowAnalytics)
+    setMarketing(allowMarketing)
     if (allowAnalytics) enableAnalytics()
     else if (previous?.analytics || gaLoaded) disableAnalytics()
     else gtag('consent', 'update', { analytics_storage: 'denied' })
+    if (allowMarketing) enableMetaPixel()
+    else disableMetaPixel()
     setReopened(false)
     setShowPrefs(false)
     window.dispatchEvent(new Event(CHANGE_EVENT))
@@ -158,7 +177,8 @@ export function CookieConsent() {
       </p>
       <p className="pl-cc__text">
         Folosim cookie-uri strict necesare ca site-ul să funcționeze. Cu acordul tău, folosim și Google Analytics, ca
-        să vedem câți oameni ne vizitează și ce îi interesează. Poți schimba alegerea oricând din „Setări cookie”,
+        să vedem câți oameni ne vizitează și ce îi interesează, și Meta Pixel, ca să măsurăm reclamele de pe Facebook și
+        Instagram. Poți schimba alegerea oricând din „Setări cookie”,
         în josul paginii. Detalii în <Link href="/politica-cookies">Politica de cookie-uri</Link>.
       </p>
 
@@ -179,18 +199,28 @@ export function CookieConsent() {
               <span>Măsurarea anonimizată a vizitelor. Opționale, active doar cu acordul tău.</span>
             </span>
           </label>
+          <label className="pl-cc__pref">
+            <input type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} />
+            <span>
+              <b>Marketing (Meta Pixel)</b>
+              <span>
+                Măsurarea și îmbunătățirea reclamelor noastre de pe Facebook și Instagram. Opționale, active doar cu acordul
+                tău.
+              </span>
+            </span>
+          </label>
         </fieldset>
       ) : null}
 
       <div className="pl-cc__actions">
-        <button type="button" className="pl-cc__btn" onClick={() => save(false)}>
+        <button type="button" className="pl-cc__btn" onClick={() => save(false, false)}>
           Refuz
         </button>
-        <button type="button" className="pl-cc__btn" onClick={() => save(true)}>
+        <button type="button" className="pl-cc__btn" onClick={() => save(true, true)}>
           Accept toate
         </button>
         {showPrefs ? (
-          <button type="button" className="pl-cc__link" onClick={() => save(analytics)}>
+          <button type="button" className="pl-cc__link" onClick={() => save(analytics, marketing)}>
             Salvez alegerea
           </button>
         ) : (

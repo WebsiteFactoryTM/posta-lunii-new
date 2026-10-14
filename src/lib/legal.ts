@@ -18,15 +18,18 @@ export const COMPANY = {
 } as const
 
 /** Data ultimei actualizări a documentelor legale (afișată în pagini). */
-export const LEGAL_UPDATED = '5 octombrie 2026'
+export const LEGAL_UPDATED = '14 octombrie 2026'
 
 /** Versiunea consimțământului pentru cookie. Crește-o când se schimbă lista de
  *  cookie-uri opționale, ca bannerul să ceară din nou acordul. */
-export const CONSENT_VERSION = 1
+// v2: a apărut categoria „Marketing” (Meta Pixel).
+export const CONSENT_VERSION = 2
 export const CONSENT_COOKIE = 'pl_consent'
 export const CONSENT_MAX_AGE_DAYS = 180
 
 export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-G5E9T34WP3'
+
+export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || '1367442525463905'
 
 export const LEGAL_LINKS = [
   { href: '/termeni-si-conditii', label: 'Termeni și condiții' },

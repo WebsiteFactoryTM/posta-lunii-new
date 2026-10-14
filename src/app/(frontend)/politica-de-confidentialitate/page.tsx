@@ -122,6 +122,20 @@ export default function PrivacyPage() {
                 <td>Statistici despre vizite, ca să îmbunătățim site-ul (Google Analytics 4)</td>
                 <td>Art. 6 alin. (1) lit. a) — consimțământul tău, pe care îl poți retrage oricând</td>
               </tr>
+              <tr>
+                <td>Accepți cookie-urile de marketing (Meta Pixel)</td>
+                <td>
+                  Identificatorii de cookie Meta (<code>_fbp</code>, <code>_fbc</code>), paginile vizitate și acțiunile
+                  de pe site (vizualizarea prețurilor, începerea comenzii, cumpărarea, cu varianta și suma plătită),
+                  adresa IP și tipul de browser. Dacă cumperi, transmitem și emailul, telefonul, numele, prenumele,
+                  orașul, codul poștal și țara, criptate ireversibil (hash SHA-256) înainte de trimitere
+                </td>
+                <td>
+                  Măsurarea eficienței reclamelor noastre pe Facebook și Instagram și afișarea lor către persoane
+                  interesate (Meta Pixel și Conversions API)
+                </td>
+                <td>Art. 6 alin. (1) lit. a) — consimțământul tău, pe care îl poți retrage oricând</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -131,9 +145,30 @@ export default function PrivacyPage() {
         </p>
         <p>
           Datele de comandă sunt necesare pentru încheierea contractului: fără ele nu putem încasa plata și nu îți putem
-          trimite plicul. Nu folosim datele tale pentru publicitate personalizată, nu le vindem și nu luăm decizii
-          automate (inclusiv profilare) care să producă efecte juridice asupra ta. Nu îți trimitem newslettere sau
-          mesaje de marketing fără acordul tău separat.
+          trimite plicul. Nu vindem datele tale și nu luăm decizii automate (inclusiv profilare) care să producă efecte
+          juridice asupra ta. Nu îți trimitem newslettere sau mesaje de marketing fără acordul tău separat.
+        </p>
+        <p>
+          <b>Meta Pixel și Conversions API.</b> Doar dacă accepți cookie-urile de marketing, folosim Meta Pixel, un
+          instrument al Meta Platforms Ireland Limited, ca să aflăm dacă reclamele noastre de pe Facebook și Instagram
+          aduc vizite și comenzi și ca să le arătăm oamenilor care ar putea fi interesați de Poșta Lunii. Pixelul
+          transmite către Meta paginile vizitate și acțiunile de pe site (de exemplu, vizualizarea prețurilor, începerea
+          unei comenzi, cumpărarea), împreună cu identificatorii de cookie, adresa IP și tipul de browser. Când plata
+          este confirmată, serverul nostru trimite către Meta și evenimentul de cumpărare (Conversions API), cu varianta
+          și suma plătită, plus emailul, telefonul, numele, prenumele, orașul, codul poștal și țara, criptate ireversibil
+          (hash SHA-256) înainte de trimitere. Meta le folosește ca să potrivească evenimentul cu un cont Facebook sau
+          Instagram, dacă există. Plățile recurente lunare nu sunt raportate. Pentru colectarea și transmiterea acestor
+          date suntem operatori asociați cu Meta (art. 26 GDPR); prelucrarea ulterioară este responsabilitatea Meta,
+          conform{' '}
+          <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener">
+            Politicii de confidențialitate Meta
+          </a>{' '}
+          și{' '}
+          <a href="https://www.facebook.com/legal/controller_addendum" target="_blank" rel="noopener">
+            acordului de operator asociat
+          </a>
+          . Dacă refuzi sau îți retragi acordul din „Setări cookie”, pixelul nu se încarcă (sau se oprește), iar
+          comenzile tale nu mai sunt raportate către Meta.
         </p>
       </LegalSection>
 
@@ -163,6 +198,10 @@ export default function PrivacyPage() {
             <b>Google Ireland Limited</b> — Google Analytics 4, doar dacă ai acceptat cookie-urile de statistică.
           </li>
           <li>
+            <b>Meta Platforms Ireland Limited</b> — Meta Pixel și Conversions API, doar dacă ai acceptat cookie-urile de
+            marketing (operator asociat pentru colectare și transmitere; vezi secțiunea 2).
+          </li>
+          <li>
             <b>Contabilul</b> sau firma de contabilitate cu care lucrăm — datele din documentele fiscale.
           </li>
           <li>
@@ -177,7 +216,7 @@ export default function PrivacyPage() {
 
       <LegalSection id="transferuri" title="4. Transferuri în afara Spațiului Economic European">
         <p>
-          Unii furnizori (Vercel, Stripe, Google) pot prelucra date în Statele Unite. Aceste transferuri se fac pe baza
+          Unii furnizori (Vercel, Stripe, Google, Meta) pot prelucra date în Statele Unite. Aceste transferuri se fac pe baza
           deciziei de adecvare a Comisiei Europene pentru Cadrul UE-SUA privind protecția datelor (EU-U.S. Data Privacy
           Framework), pentru furnizorii certificați, și/sau pe baza clauzelor contractuale standard aprobate de Comisia
           Europeană, împreună cu măsuri suplimentare de securitate. Ne poți cere o copie a garanțiilor folosite.
@@ -206,6 +245,10 @@ export default function PrivacyPage() {
           </li>
           <li>
             <b>Datele Google Analytics</b> — 14 luni, apoi sunt șterse automat.
+          </li>
+          <li>
+            <b>Cookie-urile Meta</b> (<code>_fbp</code>, <code>_fbc</code>) — 90 de zile în browserul tău; datele
+            transmise către Meta sunt păstrate de Meta conform politicii sale.
           </li>
           <li>
             <b>Alegerea ta privind cookie-urile</b> — 6 luni, apoi te întrebăm din nou.

@@ -37,7 +37,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/admin/', '/api/', '/media/'],
+        disallow: ['/admin', '/admin/', '/api/', '/media/', '/multumim', '/webhooks/'],
       },
       ...AI_AGENTS.map((userAgent) => ({
         userAgent,
