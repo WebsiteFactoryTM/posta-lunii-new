@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Caveat, Fraunces, Instrument_Sans } from 'next/font/google'
 import Script from 'next/script'
@@ -143,6 +144,7 @@ export default function FrontendLayout({ children }: { children: React.ReactNode
         <Motion />
         <CookieConsent />
         <MetaPageViews />
+        <Analytics />
       </body>
     </html>
   )
