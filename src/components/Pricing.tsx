@@ -103,8 +103,8 @@ export function Pricing({ pricing, deadline }: Props) {
                   <PlanCheckout plan={plan} />
                   <p className="pl-plan__address">
                     La plată, completează adresa completă: stradă, număr, bloc, scară, etaj, apartament, localitate,
-                    județ și cod poștal. Plicul vine prin Poșta Română, la cutia poștală, așa că fiecare detaliu
-                    contează.
+                    județ și cod poștal. Plicul vine prin Poșta Română, de obicei la cutia poștală. Dacă nu poate fi
+                    lăsat acolo, îl poți ridica de la oficiul poștal de care aparții.
                   </p>
                 </article>
               )
