@@ -27,6 +27,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 1,
     },
+    {
+      url: `${siteUrl}/posta-secreta`,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
     ...LEGAL_LINKS.map((link) => ({
       url: `${siteUrl}${link.href}`,
       changeFrequency: 'yearly' as const,

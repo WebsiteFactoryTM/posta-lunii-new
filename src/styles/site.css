@@ -648,3 +648,38 @@
 @media print {
   .pl-legal__header, .pl-footer, .pl-cc, .pl-withdraw__done .pl-btn { display: none !important; }
 }
+
+/* ---------- Pastila spre celălalt produs (Poșta Lunii ↔ Poșta Secretă) ---------- */
+.pl-xlink {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px 0 8px;
+  border-radius: 999px; text-decoration: none; white-space: nowrap;
+  font: 600 13px/1.1 var(--sans); letter-spacing: .03em;
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease), background-color .35s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pl-xlink__icon { flex: none; width: 24px; height: 24px; object-fit: contain; }
+.pl-xlink__note { font-weight: 400; letter-spacing: 0; }
+.pl-xlink:hover { transform: translateY(-2px); }
+.pl-xlink:focus-visible { outline: 3px solid var(--night-700); outline-offset: 3px; }
+.pl-xlink--secreta { background: var(--paper-50); box-shadow: 0 0 0 1.5px var(--olive-500) inset, 0 6px 16px -10px rgba(86,96,58,.6); }
+.pl-header__nav .pl-xlink--secreta, .pl-xlink--secreta { color: var(--olive-700); }
+.pl-xlink--secreta .pl-xlink__note { color: var(--ink-600); }
+.pl-xlink--secreta:hover { background: #fff; box-shadow: 0 0 0 1.5px var(--olive-700) inset, 0 10px 22px -10px rgba(86,96,58,.7); }
+.pl-xlink--lunii { background: var(--night-900); box-shadow: 0 6px 16px -10px rgba(27,24,54,.8); }
+.pl-header__nav .pl-xlink--lunii, .pl-xlink--lunii { color: var(--on-night); }
+.pl-xlink--lunii .pl-xlink__note { color: var(--moon-300); }
+.pl-xlink--lunii:hover { box-shadow: 0 0 0 1px rgba(212,168,87,.45), 0 10px 26px -8px rgba(212,168,87,.55); }
+.pl-header__nav .pl-xlink:hover { color: inherit; }
+/* Iconița „se trezește” din când în când, ca pastila să fie observată. */
+.pl-xlink__icon { transform-origin: 50% 90%; animation: pl-xlink-nudge 7s ease-in-out 2.5s infinite; }
+.pl-xlink:hover .pl-xlink__icon { animation: pl-xlink-nudge-now .7s ease-in-out; }
+@keyframes pl-xlink-nudge { 0%, 86%, 100% { transform: none; } 89% { transform: rotate(-12deg); } 92% { transform: rotate(9deg); } 95% { transform: rotate(-5deg); } }
+@keyframes pl-xlink-nudge-now { 0%, 100% { transform: none; } 25% { transform: rotate(-12deg); } 55% { transform: rotate(9deg); } 80% { transform: rotate(-4deg); } }
+.pl-xlink--menu { width: 100%; justify-content: center; min-height: 52px; margin-top: 14px; font-size: 14px; }
+
+@media (max-width: 1040px) { .pl-header__nav .pl-xlink__note { display: none; } }
+@media (max-width: 860px) {
+  /* Pe mobil linkurile din bară dispar, dar pastila rămâne, lângă hamburger. */
+  .pl-header__nav .pl-xlink { display: inline-flex; min-height: 38px; margin-right: 42px; padding: 0 14px 0 7px; font-size: 12.5px; }
+  .pl-header__nav .pl-xlink__icon { width: 22px; height: 22px; }
+}

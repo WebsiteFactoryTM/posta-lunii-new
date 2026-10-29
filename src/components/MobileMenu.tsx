@@ -3,12 +3,14 @@
 import Image from 'next/image'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { NavItem } from '@/lib/content'
+import { CrossLink, type CrossLinkKind } from './CrossLink'
 
 type Props = {
   items: NavItem[]
   ctaLabel: string
   ctaHref: string
   note: string
+  crossLink?: CrossLinkKind
 }
 
 /**
@@ -17,7 +19,7 @@ type Props = {
  * afară și la alegerea unui link (fiind ancore în aceeași pagină), iar focusul
  * este ținut înăuntru cât e deschis.
  */
-export function MobileMenu({ items, ctaLabel, ctaHref, note }: Props) {
+export function MobileMenu({ items, ctaLabel, ctaHref, note, crossLink }: Props) {
   const [open, setOpen] = useState(false)
   const panelId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -128,6 +130,9 @@ export function MobileMenu({ items, ctaLabel, ctaHref, note }: Props) {
               →
             </span>
           </a>
+          {crossLink ? (
+            <CrossLink kind={crossLink} className="pl-xlink--menu" onClick={close} tabIndex={open ? undefined : -1} />
+          ) : null}
           <p className="pl-menu__note">
             <Image src="/assets/paw.webp" alt="" width={400} height={395} sizes="22px" />
             {note}

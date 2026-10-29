@@ -36,12 +36,13 @@ export default async function HomePage() {
       />
 
       <div className="pl" id="top">
-        <Header navigation={navigation} siteName={settings.siteName} />
+        <Header navigation={navigation} siteName={settings.siteName} crossLink="secreta" />
         <MobileMenu
           items={navigation.items}
           ctaLabel={navigation.ctaLabel}
           ctaHref={navigation.ctaHref}
           note={landing.footer.baseNote}
+          crossLink="secreta"
         />
 
         <Hero hero={landing.hero} siteName={settings.siteName} ctaHref={navigation.ctaHref} deadline={deadline.short} />

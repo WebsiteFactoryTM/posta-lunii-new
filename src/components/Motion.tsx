@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 
 /**
@@ -12,8 +13,14 @@ import { useEffect } from 'react'
  *
  * Deschiderea plicului este pur CSS (vezi `pl-env-in` / `pl-env-open`), deci nu
  * întârzie dacă pachetul JavaScript se încarcă greu.
+ *
+ * Componenta stă în layout, care nu se remontează la navigarea între pagini
+ * (next/link). De aceea observatorii se refac la fiecare schimbare de rută —
+ * altfel elementele `.pl-reveal` ale paginii noi ar rămâne ascunse.
  */
 export function Motion() {
+  const pathname = usePathname()
+
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const targets = Array.from(
@@ -61,7 +68,7 @@ export function Motion() {
       revealObserver?.disconnect()
       headerObserver?.disconnect()
     }
-  }, [])
+  }, [pathname])
 
   return null
 }
