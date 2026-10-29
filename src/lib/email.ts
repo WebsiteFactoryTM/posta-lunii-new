@@ -5,6 +5,8 @@
  */
 
 import { COMPANY, WITHDRAWAL_HREF } from './legal'
+import { orderDeadline } from './order-deadline'
+import { postaSecretaPlanByVariant } from './posta-secreta-plans'
 import { absoluteUrl } from './site'
 
 /** Adresa de expeditor. Domeniul trebuie verificat în Resend (Domains). */
@@ -56,11 +58,33 @@ const textDetails = (rows: Array<[string, string | null | undefined]>) =>
     .map(([label, value]) => `${label}: ${value}`)
     .join('\n')
 
-const button = (href: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="background:${C.moon};border-radius:999px"><a href="${href}" style="display:inline-block;padding:12px 24px;font:600 15px ${SANS};color:${C.ink};text-decoration:none">${escapeHtml(label)}</a></td></tr></table>`
+const button = (href: string, label: string, colors: { bg: string; fg: string } = { bg: C.moon, fg: C.ink }) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 24px"><tr><td style="background:${colors.bg};border-radius:999px"><a href="${href}" style="display:inline-block;padding:12px 24px;font:600 15px ${SANS};color:${colors.fg};text-decoration:none">${escapeHtml(label)}</a></td></tr></table>`
+
+/** Antetul și nota din subsol diferă între Poșta Lunii și Poșta Secretă; restul cadrului e comun. */
+const BRANDS = {
+  'posta-lunii': {
+    href: '/',
+    mark: '☾ Poșta Lunii',
+    color: C.night,
+    note: 'Din fiecare plic, 15 lei merg către Adăpostul Speranța.<br>',
+  },
+  'posta-secreta': { href: '/posta-secreta', mark: '✉ Poșta Secretă', color: '#566848', note: '' },
+} as const
 
 /** Cadrul comun: antet cu numele, cardul cu conținut, subsol cu datele firmei. */
-function layout({ title, preheader, body }: { title: string; preheader: string; body: string }) {
+function layout({
+  title,
+  preheader,
+  body,
+  brand = 'posta-lunii',
+}: {
+  title: string
+  preheader: string
+  body: string
+  brand?: keyof typeof BRANDS
+}) {
+  const b = BRANDS[brand]
   return `<!doctype html>
 <html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head>
 <body style="margin:0;padding:0;background:${C.paper}">
@@ -68,14 +92,14 @@ function layout({ title, preheader, body }: { title: string; preheader: string; 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.paper}"><tr><td align="center" style="padding:32px 16px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
     <tr><td style="padding:0 0 20px;text-align:center">
-      <a href="${absoluteUrl('/')}" style="font:italic 600 26px ${SERIF};color:${C.night};text-decoration:none">☾ Poșta Lunii</a>
+      <a href="${absoluteUrl(b.href)}" style="font:italic 600 26px ${SERIF};color:${b.color};text-decoration:none">${b.mark}</a>
     </td></tr>
     <tr><td style="background:${C.card};border:1px solid ${C.line};border-radius:16px;padding:32px 28px">
-      <h1 style="margin:0 0 20px;font:600 24px/1.25 ${SERIF};color:${C.night}">${escapeHtml(title)}</h1>
+      <h1 style="margin:0 0 20px;font:600 24px/1.25 ${SERIF};color:${b.color}">${escapeHtml(title)}</h1>
       ${body}
     </td></tr>
     <tr><td style="padding:24px 8px 0;text-align:center;font:12px/1.6 ${SANS};color:${C.muted}">
-      Din fiecare plic, 15 lei merg către Adăpostul Speranța.<br>
+      ${b.note}
       ${escapeHtml(COMPANY.name)} · CUI ${COMPANY.cui} · ${escapeHtml(COMPANY.address)}<br>
       <a href="mailto:${COMPANY.email}" style="color:${C.moonInk}">${COMPANY.email}</a> ·
       <a href="${absoluteUrl('/termeni-si-conditii')}" style="color:${C.moonInk}">Termeni</a> ·
@@ -222,6 +246,128 @@ export function orderAdminEmail(order: OrderEmailData, adminUrl: string): Email 
     subject: `[Poșta Lunii] Comandă nouă — ${order.variantName}, ${formatMoney(order.amount, order.currency)}`,
     html,
     text: `A intrat o comandă nouă.\n\n${textDetails(rows)}\n\nAdmin: ${adminUrl}`,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Comenzi Poșta Secretă (produsele Stripe cu metadata `linie: posta-secreta`)
+// ---------------------------------------------------------------------------
+
+/**
+ * Unde își schimbă clientul adresa sau își oprește abonamentul: linkul de
+ * autentificare al portalului de clienți Stripe (Settings → Billing → Customer
+ * portal → „Link”). Fără el, trimitem la adresa de contact.
+ */
+const CUSTOMER_PORTAL_URL = process.env.STRIPE_CUSTOMER_PORTAL_URL || ''
+
+const MONTHS_RO = ['ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie', 'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie']
+
+/** Luna primului plic, cu anul: „decembrie 2026”. Același termen ca pe site (order-deadline.ts). */
+function firstEditionLabel(createdAt: Date) {
+  const { editionMonth } = orderDeadline(createdAt)
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Bucharest', year: 'numeric', month: 'numeric' }).formatToParts(createdAt)
+  const year = Number(parts.find((part) => part.type === 'year')?.value)
+  const month = Number(parts.find((part) => part.type === 'month')?.value) - 1
+  const editionIndex = MONTHS_RO.indexOf(editionMonth)
+  return `${editionMonth} ${editionIndex < month ? year + 1 : year}`
+}
+
+/** „55 lei”, „660 lei” — fără zecimale inutile. */
+const formatLei = (value: number) => `${new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 2 }).format(value)} lei`
+
+const secretProductName = (order: OrderEmailData) => postaSecretaPlanByVariant(order.variant)?.name ?? order.variantName
+
+export function postaSecretaCustomerEmail(order: OrderEmailData): Email {
+  const firstName = order.name?.trim().split(/\s+/)[0]
+  const product = secretProductName(order)
+  const portal = CUSTOMER_PORTAL_URL
+    ? `<a href="${escapeHtml(CUSTOMER_PORTAL_URL)}" style="color:#566848">${escapeHtml(CUSTOMER_PORTAL_URL)}</a>`
+    : `<a href="mailto:${COMPANY.email}" style="color:#566848">${COMPANY.email}</a>`
+  const portalText = CUSTOMER_PORTAL_URL || COMPANY.email
+  const when = 'plicurile lunii următoare pleacă prin Poșta Română în ultima săptămână a lunii curente.'
+  const rows: Array<[string, string | null | undefined]> = [
+    ['Ce ai ales', product],
+    ['Dosarul secret pleacă spre', order.shippingAddress],
+    ['Când', when],
+  ]
+  const tips = (link: string) => [
+    'De obicei, plicul ajunge direct în cutia poștală. Uneori poștașul te poate suna sau poate lăsa un aviz, iar plicul se ridică de la oficiul poștal de care aparții.',
+    `Dacă vrei să schimbi adresa sau să oprești abonamentul, o poți face oricând de aici: ${link}`,
+    'Pentru orice întrebare, răspunde la acest email.',
+  ]
+  const intro =
+    'Îți mulțumesc! Comanda ta a ajuns la Oficiul Poștal al Pădurii Fermecate, iar Vivi a notat deja în registru un nou Ajutor al Poștei Secrete.'
+  // Datele comenzii și dreptul de retragere: confirmarea pe suport durabil cerută de lege.
+  const legal = `Comanda ${order.reference} · plătit ${formatMoney(order.amount, order.currency)} · ${formatDateTime(order.createdAt)}. Chitanța plății îți vine separat, de la Stripe. Te poți retrage din contract în 14 zile de la primirea primului plic, fără să ne spui motivul:`
+
+  const html = layout({
+    brand: 'posta-secreta',
+    title: 'Bun venit în Poșta Secretă!',
+    preheader: `${product} · Vivi a notat deja în registru un nou Ajutor al Poștei Secrete.`,
+    body: [
+      p(firstName ? `Bună, ${escapeHtml(firstName)},` : 'Bună,'),
+      p(intro),
+      details(rows),
+      p('Câteva lucruri bune de știut:'),
+      // Textele sunt fixe; doar linkul portalului e HTML (escapat mai sus).
+      `<ul style="margin:0 0 16px;padding-left:20px">${tips(portal)
+        .map((tip) => `<li style="margin:0 0 8px;font:16px/1.6 ${SANS};color:${C.ink}">${tip}</li>`)
+        .join('')}</ul>`,
+      p(
+        `Cu drag,<br>Adina<br>Poșta Secretă · Scrisori din Pădurea Fermecată<br><a href="${absoluteUrl('/')}" style="color:#566848">postalunii.ro</a>`,
+      ),
+      `<p style="margin:24px 0 0;padding-top:16px;border-top:1px solid ${C.line};font:13px/1.6 ${SANS};color:${C.muted}">${escapeHtml(legal)} <a href="${absoluteUrl(WITHDRAWAL_HREF)}" style="color:${C.muted}">formularul de retragere</a>.</p>`,
+    ].join(''),
+  })
+
+  const text = [
+    firstName ? `Bună, ${firstName},` : 'Bună,',
+    '',
+    intro,
+    '',
+    `Ce ai ales: ${product}`,
+    ...(order.shippingAddress ? [`Dosarul secret pleacă spre: ${order.shippingAddress.replace(/\n/g, ', ')}`] : []),
+    `Când: ${when}`,
+    '',
+    'Câteva lucruri bune de știut:',
+    ...tips(portalText).map((tip) => `• ${tip}`),
+    '',
+    'Cu drag,\nAdina\nPoșta Secretă · Scrisori din Pădurea Fermecată\npostalunii.ro',
+    '',
+    `${legal} ${absoluteUrl(WITHDRAWAL_HREF)}`,
+  ].join('\n')
+
+  return { subject: 'Bun venit în Poșta Secretă! ✉️', html, text: text + TEXT_FOOTER }
+}
+
+export function postaSecretaAdminEmail(order: OrderEmailData, adminUrl: string): Email {
+  const product = secretProductName(order)
+  const buyer = [order.name, order.email].filter(Boolean).join(', ')
+  const rows: Array<[string, string | null | undefined]> = [
+    ['Produs', `${product} (${formatLei(order.amount)})`],
+    ['Adresa de livrare', order.shippingAddress],
+    ['Telefon', order.phone],
+    ['Cumpărător', buyer],
+    ['Primul plic', firstEditionLabel(order.createdAt)],
+    ['Comanda', order.reference],
+    ['Mod', order.livemode ? 'Live' : 'TEST (Stripe test mode)'],
+  ]
+  const html = layout({
+    brand: 'posta-secreta',
+    title: `Comandă nouă Poșta Secretă: ${product}`,
+    preheader: `${order.name ?? 'Client nou'} · ${formatLei(order.amount)}`,
+    body: [
+      details(rows),
+      button(adminUrl, 'Vezi comanda în admin', { bg: '#566848', fg: '#ffffff' }),
+      p(
+        `<span style="font-size:14px;color:${C.muted}">Plățile lunare următoare ale abonamentelor nu generează comenzi noi; le vezi în Stripe.</span>`,
+      ),
+    ].join(''),
+  })
+  return {
+    subject: `Comandă nouă Poșta Secretă: ${product}`,
+    html,
+    text: `${textDetails(rows)}\n\nAdmin: ${adminUrl}`,
   }
 }
 

@@ -1,6 +1,6 @@
 import { sendPurchaseToMeta } from '@/lib/meta-capi'
 import { recordOrder } from '@/lib/orders'
-import { isPaid, purchaseInfo, verifyStripeEvent, type CheckoutSession } from '@/lib/stripe'
+import { isPaid, purchaseInfo, resolveProductLine, verifyStripeEvent, type CheckoutSession } from '@/lib/stripe'
 
 /**
  * Webhook Stripe: comanda nouă în admin + emailuri (client și administrator) +
@@ -37,7 +37,8 @@ export async function POST(request: Request) {
   // înregistrează la `checkout.session.async_payment_succeeded`, când banii sunt încasați.
   if (!isPaid(session)) return json({ received: true, skipped: 'not paid yet' })
 
-  const info = purchaseInfo(session)
+  // Poșta Lunii sau Poșta Secretă: după metadata `linie` din Stripe, apoi după referința de pe site.
+  const info = purchaseInfo(session, await resolveProductLine(session))
 
   // 1. Comanda + emailurile. Dacă baza de date nu răspunde, 500 → Stripe reîncearcă;
   //    o comandă deja înregistrată nu se dublează și nu retrimite emailurile.

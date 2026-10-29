@@ -1,6 +1,16 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 
-import { decodeCheckoutRef, VARIANTS, variantFromAmount, type CheckoutRef, type VariantKey } from './checkout'
+import {
+  decodeCheckoutRef,
+  isProductLine,
+  PRODUCT_LINES,
+  VARIANTS,
+  variantFromAmount,
+  type CheckoutRef,
+  type ProductLine,
+  type VariantKey,
+} from './checkout'
+import { postaSecretaPlanByVariant } from './posta-secreta-plans'
 
 /**
  * Acces minim la Stripe, direct prin API-ul REST (fără SDK): citirea unei
@@ -37,14 +47,28 @@ export type CheckoutSession = {
   } | null
   collected_information?: { shipping_details?: { name?: string | null; address?: Address } | null } | null
   shipping_details?: { name?: string | null; address?: Address } | null
+  metadata?: Record<string, string> | null
+  /** Doar cu `expand[]=line_items.data.price.product` (vezi `resolveProductLine`). */
+  line_items?: {
+    data: Array<{
+      price?: {
+        metadata?: Record<string, string> | null
+        product?: string | { metadata?: Record<string, string> | null } | null
+      } | null
+    }>
+  } | null
 }
 
 const SESSION_ID_RE = /^cs_(test|live)_[A-Za-z0-9]+$/
 
-export async function retrieveCheckoutSession(sessionId: string): Promise<CheckoutSession | null> {
+export async function retrieveCheckoutSession(
+  sessionId: string,
+  { withProducts = false }: { withProducts?: boolean } = {},
+): Promise<CheckoutSession | null> {
   const key = process.env.STRIPE_SECRET_KEY
   if (!key || !SESSION_ID_RE.test(sessionId)) return null
-  const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
+  const query = withProducts ? '?expand[]=line_items.data.price.product' : ''
+  const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}${query}`, {
     headers: { Authorization: `Bearer ${key}` },
     cache: 'no-store',
   })
@@ -81,7 +105,11 @@ export type PurchaseInfo = {
   value: number
   currency: string
   variant: VariantKey | null
+  /** Poșta Lunii sau Poșta Secretă. */
+  line: ProductLine
   contentName: string
+  /** `content_ids` la Meta: varianta pentru Poșta Lunii, cheia planului pentru Poșta Secretă. */
+  contentId: string
   ref: CheckoutRef | null
 }
 
@@ -89,17 +117,53 @@ export const isPaid = (session: CheckoutSession) => session.status === 'complete
 
 export const createdWithin = (session: CheckoutSession, seconds: number) => Date.now() / 1000 - session.created < seconds
 
-export function purchaseInfo(session: CheckoutSession): PurchaseInfo {
+/** Metadata `linie` de pe sesiune, pe preț sau pe produsul Stripe. */
+function lineFromMetadata(session: CheckoutSession): ProductLine | null {
+  const candidates = [
+    session.metadata?.linie,
+    ...(session.line_items?.data ?? []).flatMap((item) => [
+      item.price?.metadata?.linie,
+      typeof item.price?.product === 'object' ? item.price.product?.metadata?.linie : undefined,
+    ]),
+  ]
+  return candidates.find(isProductLine) ?? null
+}
+
+/**
+ * Linia de produs a unei comenzi. Sursa principală e metadata Stripe
+ * `linie: posta-secreta` (pe produs sau preț), citită cu produsele expandate;
+ * dacă lipsește sau Stripe nu răspunde, contează referința pusă de butonul de pe
+ * site (`ps1_…` / `pl1_…`). Fără niciuna: Poșta Lunii, ca până acum.
+ */
+export async function resolveProductLine(session: CheckoutSession): Promise<ProductLine> {
+  let line = lineFromMetadata(session)
+  if (!line && !session.line_items) {
+    const expanded = await retrieveCheckoutSession(session.id, { withProducts: true }).catch(() => null)
+    if (expanded) line = lineFromMetadata(expanded)
+  }
+  return line ?? decodeCheckoutRef(session.client_reference_id)?.line ?? 'posta-lunii'
+}
+
+export function purchaseInfo(session: CheckoutSession, line?: ProductLine): PurchaseInfo {
   const value = (session.amount_total ?? 0) / 100
   const ref = decodeCheckoutRef(session.client_reference_id)
   const variant = ref?.variant ?? variantFromAmount(value)
+  const productLine = line ?? ref?.line ?? 'posta-lunii'
+  const secretPlan = productLine === 'posta-secreta' ? postaSecretaPlanByVariant(variant) : null
   return {
     // Legat de comandă: aceeași sesiune Stripe → același event_id → Meta deduplică.
     eventId: session.id,
     value,
     currency: (session.currency ?? 'ron').toUpperCase(),
     variant,
-    contentName: variant ? VARIANTS[variant] : 'abonament',
+    line: productLine,
+    contentName:
+      productLine === 'posta-secreta'
+        ? `${PRODUCT_LINES['posta-secreta']} – ${secretPlan?.name ?? 'abonament'}`
+        : variant
+          ? VARIANTS[variant]
+          : 'abonament',
+    contentId: secretPlan?.planKey ?? variant ?? 'abonament',
     ref,
   }
 }

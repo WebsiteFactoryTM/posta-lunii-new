@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 import { MetaPurchase } from '@/components/MetaPixelEvents'
 import { COMPANY } from '@/lib/legal'
-import { createdWithin, isPaid, purchaseInfo, retrieveCheckoutSession } from '@/lib/stripe'
+import { createdWithin, isPaid, purchaseInfo, resolveProductLine, retrieveCheckoutSession } from '@/lib/stripe'
 
 export const metadata: Metadata = {
   title: 'Mulțumim pentru comandă',
@@ -29,7 +29,8 @@ export default async function ThankYouPage({ searchParams }: Props) {
   const sessionId = typeof session_id === 'string' ? session_id : ''
   const session = sessionId ? await retrieveCheckoutSession(sessionId) : null
   const paid = session ? isPaid(session) : false
-  const info = session && paid ? purchaseInfo(session) : null
+  const info = session && paid ? purchaseInfo(session, await resolveProductLine(session)) : null
+  const secret = info?.line === 'posta-secreta'
   const recent = session ? createdWithin(session, PURCHASE_MAX_AGE_SECONDS) : false
 
   return (
@@ -44,7 +45,7 @@ export default async function ThankYouPage({ searchParams }: Props) {
           {info ? (
             <>
               <h1 className="pl-h2" style={{ marginBottom: 18 }}>
-                Mulțumim! Plicul tău e pe drum spre lună
+                {secret ? 'Mulțumim! Comanda ta e confirmată' : 'Mulțumim! Plicul tău e pe drum spre lună'}
               </h1>
               <p className="pl-closing__for">
                 Plata de {formatAmount(info.value, info.currency)} (varianta {info.contentName}) a fost confirmată. Vei
@@ -64,8 +65,8 @@ export default async function ThankYouPage({ searchParams }: Props) {
             </>
           )}
 
-          <Link className="pl-btn pl-btn--gold" href="/">
-            Înapoi la Poșta Lunii{' '}
+          <Link className="pl-btn pl-btn--gold" href={secret ? '/posta-secreta' : '/'}>
+            {secret ? 'Înapoi la Poșta Secretă' : 'Înapoi la Poșta Lunii'}{' '}
             <span className="pl-btn__arrow" aria-hidden="true">
               →
             </span>
@@ -79,7 +80,7 @@ export default async function ThankYouPage({ searchParams }: Props) {
           value={info.value}
           currency={info.currency}
           contentName={info.contentName}
-          contentId={info.variant ?? 'abonament'}
+          contentId={info.contentId}
         />
       ) : null}
     </div>

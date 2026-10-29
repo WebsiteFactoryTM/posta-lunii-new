@@ -3,12 +3,11 @@
  * Stripe Payment Links (buy.stripe.com/…), doar că URL-urile vin din variabile
  * de mediu, nu din admin, ca să poată fi completate fără a atinge codul.
  *
- * Fiecare link primește `client_reference_id=<planKey>`, pe care Stripe îl
- * păstrează pe Checkout Session — așa comenzile de Poșta Secretă se disting de
- * cele de Poșta Lunii în dashboard, în export și în webhook-uri.
+ * Referința (`client_reference_id = ps1_…`) se adaugă în browser, la click, ca la
+ * Poșta Lunii (vezi PlanCheckout): include acordul de marketing și ID-urile Meta.
  */
 
-export type PostaSecretaPlanKey = 'posta-secreta-o-luna' | 'posta-secreta-lunar' | 'posta-secreta-integral'
+import type { PostaSecretaPlanKey } from './posta-secreta-plans'
 
 export type PostaSecretaCheckoutUrls = Record<PostaSecretaPlanKey, string | null>
 
@@ -19,21 +18,17 @@ const RAW: Record<PostaSecretaPlanKey, string | undefined> = {
   'posta-secreta-integral': process.env.STRIPE_LINK_POSTA_SECRETA_INTEGRAL,
 }
 
-function withReference(raw: string | undefined, planKey: PostaSecretaPlanKey): string | null {
-  if (!raw || !/^https:\/\//.test(raw.trim())) return null
-  try {
-    const url = new URL(raw.trim())
-    url.searchParams.set('client_reference_id', planKey)
-    return url.toString()
-  } catch {
-    return null
-  }
+const isStripeLink = (url: string) => /^https:\/\/buy\.stripe\.com\//.test(url)
+
+const clean = (raw: string | undefined) => {
+  const url = raw?.trim()
+  return url && isStripeLink(url) ? url : null
 }
 
 export function getPostaSecretaCheckoutUrls(): PostaSecretaCheckoutUrls {
   return {
-    'posta-secreta-o-luna': withReference(RAW['posta-secreta-o-luna'], 'posta-secreta-o-luna'),
-    'posta-secreta-lunar': withReference(RAW['posta-secreta-lunar'], 'posta-secreta-lunar'),
-    'posta-secreta-integral': withReference(RAW['posta-secreta-integral'], 'posta-secreta-integral'),
+    'posta-secreta-o-luna': clean(RAW['posta-secreta-o-luna']),
+    'posta-secreta-lunar': clean(RAW['posta-secreta-lunar']),
+    'posta-secreta-integral': clean(RAW['posta-secreta-integral']),
   }
 }

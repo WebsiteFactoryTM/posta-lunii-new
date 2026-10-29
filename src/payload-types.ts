@@ -215,6 +215,7 @@ export interface Order {
   id: number;
   reference: string;
   status?: ('new' | 'active' | 'done' | 'cancelled') | null;
+  productLine?: ('posta-lunii' | 'posta-secreta') | null;
   variant?: ('lunar' | 'anual-recurent' | 'anual-integral') | null;
   amount?: number | null;
   currency?: string | null;
@@ -419,6 +420,7 @@ export interface MediaSelect<T extends boolean = true> {
 export interface OrdersSelect<T extends boolean = true> {
   reference?: T;
   status?: T;
+  productLine?: T;
   variant?: T;
   amount?: T;
   currency?: T;

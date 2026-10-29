@@ -41,16 +41,35 @@ export function checkoutVariant(plan: Plan, option?: { label: string; detail?: s
   return { key, name: VARIANTS[key], value: firstNumber(option.detail) ?? firstNumber(plan.price) }
 }
 
+/**
+ * Linia de produs: Poșta Lunii sau Poșta Secretă. În Stripe, produsele Poștei
+ * Secrete au metadata `linie: posta-secreta` (vezi `resolveProductLine` în stripe.ts).
+ */
+export const PRODUCT_LINES = {
+  'posta-lunii': 'Poșta Lunii',
+  'posta-secreta': 'Poșta Secretă',
+} as const
+
+export type ProductLine = keyof typeof PRODUCT_LINES
+
+export const isProductLine = (value: unknown): value is ProductLine =>
+  typeof value === 'string' && value in PRODUCT_LINES
+
 /** Ce reținem despre vizitator la click pe butonul de comandă. */
 export type CheckoutRef = {
   variant: VariantKey
+  /** Lipsă = Poșta Lunii (referințele mai vechi nu aveau linia). */
+  line?: ProductLine
   /** A acceptat cookie-urile de marketing (Meta Pixel)? */
   marketing: boolean
   fbp?: string
   fbc?: string
 }
 
-const PREFIX = 'pl1'
+/** Prefixul spune linia de produs; `pl1` rămâne Poșta Lunii, ca linkurile existente să meargă la fel. */
+const PREFIXES: Record<ProductLine, string> = { 'posta-lunii': 'pl1', 'posta-secreta': 'ps1' }
+const lineFromPrefix = (prefix: string) =>
+  (Object.keys(PREFIXES) as ProductLine[]).find((line) => PREFIXES[line] === prefix) ?? null
 const MAX_LENGTH = 200
 
 // `_fbp` = fb.{subdomeniu}.{timestamp}.{aleator}, `_fbc` = fb.{subdomeniu}.{timestamp}.{fbclid}.
@@ -59,7 +78,7 @@ const FBP_RE = /^fb\.(\d+)\.(\d+)\.(\d+)$/
 const FBC_RE = /^fb\.(\d+)\.(\d+)\.([A-Za-z0-9_-]+)$/
 
 export function encodeCheckoutRef(ref: CheckoutRef): string {
-  const base = `${PREFIX}_${ref.variant}_${ref.marketing ? 1 : 0}`
+  const base = `${PREFIXES[ref.line ?? 'posta-lunii']}_${ref.variant}_${ref.marketing ? 1 : 0}`
   if (!ref.marketing) return base
 
   const fbp = ref.fbp?.match(FBP_RE)
@@ -74,9 +93,10 @@ export function decodeCheckoutRef(raw?: string | null): CheckoutRef | null {
   if (!raw) return null
   // fbclid poate conține „_”, de aceea tot ce urmează după fbp e fbc.
   const [prefix, variant, marketing, fbpPart, ...fbcParts] = raw.split('_')
-  if (prefix !== PREFIX || !variant || !isVariant(variant)) return null
+  const line = lineFromPrefix(prefix)
+  if (!line || !variant || !isVariant(variant)) return null
 
-  const ref: CheckoutRef = { variant, marketing: marketing === '1' }
+  const ref: CheckoutRef = { variant, line, marketing: marketing === '1' }
   if (!ref.marketing) return ref
 
   const fbp = fbpPart?.match(/^(\d+)-(\d+)-(\d+)$/)

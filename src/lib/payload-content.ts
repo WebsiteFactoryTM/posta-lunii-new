@@ -45,7 +45,18 @@ function mergeDefaults<T>(base: T, override: unknown): T {
   return out as T
 }
 
+let warnedNoDatabase = false
+
 async function readGlobal(slug: 'landing' | 'navigation' | 'settings'): Promise<unknown> {
+  // Fără DATABASE_URL, driverul pg încearcă implicit localhost:5432 și eșuează
+  // zgomotos (plus o promisiune respinsă rămasă în cache-ul Payload). Sărim direct.
+  if (!process.env.DATABASE_URL) {
+    if (!warnedNoDatabase) {
+      warnedNoDatabase = true
+      console.warn('[posta-lunii] DATABASE_URL lipsește, folosesc textele implicite.')
+    }
+    return null
+  }
   try {
     const payload = await getPayload({ config })
     return await payload.findGlobal({ slug, depth: 1, overrideAccess: true })

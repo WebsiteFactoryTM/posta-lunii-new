@@ -4,7 +4,11 @@ import Image from 'next/image'
 import { useState } from 'react'
 
 import { postaSecreta } from '@/content/posta-secreta'
-import type { PostaSecretaCheckoutUrls, PostaSecretaPlanKey } from '@/lib/posta-secreta-checkout'
+import { encodeCheckoutRef } from '@/lib/checkout'
+import { readMetaIds, trackMeta } from '@/lib/meta-pixel'
+import type { PostaSecretaCheckoutUrls } from '@/lib/posta-secreta-checkout'
+import { POSTA_SECRETA_PLANS, type PostaSecretaPlanKey } from '@/lib/posta-secreta-plans'
+import { hasMarketingConsent } from '../CookieConsent'
 import { TermsGate, useTerms } from '../TermsConsent'
 
 type Props = { checkoutUrls: PostaSecretaCheckoutUrls }
@@ -53,7 +57,33 @@ function CheckoutLink({
           // TODO: lipsește variabila de mediu cu linkul Stripe pentru acest plan.
           event.preventDefault()
           console.warn(`[posta-secreta] lipsește linkul de checkout pentru „${planKey}”.`)
+          return
         }
+
+        const plan = POSTA_SECRETA_PLANS[planKey]
+        trackMeta('InitiateCheckout', {
+          content_name: `Poșta Secretă – ${plan.name}`,
+          content_type: 'product',
+          content_ids: [planKey],
+          num_items: 1,
+          currency: 'RON',
+          value: plan.price,
+        })
+
+        // Ca la Poșta Lunii: linia de produs, varianta și (cu acord de marketing)
+        // _fbp/_fbc ajung în Stripe ca client_reference_id, apoi în webhook.
+        const marketing = hasMarketingConsent()
+        const target = new URL(url)
+        target.searchParams.set(
+          'client_reference_id',
+          encodeCheckoutRef({
+            line: 'posta-secreta',
+            variant: plan.variant,
+            marketing,
+            ...(marketing ? readMetaIds() : {}),
+          }),
+        )
+        event.currentTarget.href = target.toString()
       }}
       {...(url ? { rel: 'noopener', target: '_blank' } : {})}
     >

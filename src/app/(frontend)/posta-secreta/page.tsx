@@ -201,7 +201,10 @@ export default async function PostaSecretaPage() {
                   alt={about.photo.alt}
                   width={about.photo.width}
                   height={about.photo.height}
-                  sizes="(min-width: 820px) 300px, 240px"
+                  // Rama e îngustă și înaltă, iar poza (800×664) o umple cu object-fit: cover,
+                  // deci se afișează mai lată decât rama: ~434px pe desktop, ~350px pe telefon.
+                  sizes="(min-width: 820px) 434px, 350px"
+                  quality={90}
                 />
               </div>
               <div className="ps-about__text pl-reveal" style={stagger(1)}>

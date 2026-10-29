@@ -6,6 +6,7 @@ import { siteUrl } from '@/lib/site'
 
 /** Ultima modificare reală a conținutului, ca sitemap-ul să nu mintă. */
 async function lastContentUpdate(): Promise<Date> {
+  if (!process.env.DATABASE_URL) return new Date()
   try {
     const payload = await getPayload({ config })
     const landing = await payload.findGlobal({ slug: 'landing', depth: 0, overrideAccess: true })

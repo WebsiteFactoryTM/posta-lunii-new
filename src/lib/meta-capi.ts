@@ -93,7 +93,7 @@ export async function sendPurchaseToMeta(
           currency: info.currency,
           content_name: info.contentName,
           content_type: 'product',
-          content_ids: info.variant ? [info.variant] : undefined,
+          content_ids: info.line === 'posta-secreta' ? [info.contentId] : info.variant ? [info.variant] : undefined,
           num_items: 1,
           order_id: session.id,
         },

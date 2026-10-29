@@ -82,7 +82,7 @@ export const postaSecreta = {
       price: 60,
       unit: "lei",
       bullets: [
-        "Primești ediția lunii următoare, livrată prin Poșta Română, fără cost de transport.",
+        "Primești ediția lunii decembrie, livrată prin Poșta Română, fără cost de transport.",
       ],
       cta: "Aleg o lună →",
       decoration: { src: "/posta-secreta/semiluna.webp", width: 296, height: 300 },
@@ -111,8 +111,7 @@ export const postaSecreta = {
       bullets: [
         "Primești 12 plicuri și ai 5 lei reducere la fiecare lună. Economisești 60 lei — adică o lună este din partea noastră. 💌",
         "Poți alege: plata integrală, o singură dată — sau plata recurentă, lună de lună. Poți anula oricând.",
-        // ATENȚIE: „31 noiembrie” e textul primit, dar noiembrie are 30 de zile — de confirmat cu Ernest.
-        "Primul plic: ediția lunii următoare. Comandă până pe 31 noiembrie ca să primești plicul de decembrie.",
+        "Primești ediția lunii decembrie ca prim plic. Comandă până pe 30 noiembrie ca să îl primești la timp.",
       ],
       cta: "Aleg abonamentul →",
     },

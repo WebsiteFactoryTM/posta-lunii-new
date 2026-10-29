@@ -2,7 +2,14 @@ import { randomBytes } from 'crypto'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import { ADMIN_EMAIL, orderAdminEmail, orderCustomerEmail, type OrderEmailData } from './email'
+import {
+  ADMIN_EMAIL,
+  orderAdminEmail,
+  orderCustomerEmail,
+  postaSecretaAdminEmail,
+  postaSecretaCustomerEmail,
+  type OrderEmailData,
+} from './email'
 import { COMPANY } from './legal'
 import { absoluteUrl } from './site'
 import type { CheckoutSession, PurchaseInfo } from './stripe'
@@ -36,7 +43,8 @@ export async function recordOrder(session: CheckoutSession, info: PurchaseInfo) 
   const customer = session.customer_details ?? {}
   const shipping = session.collected_information?.shipping_details ?? session.shipping_details ?? null
   const now = new Date()
-  const reference = `PL-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${randomBytes(3).toString('hex').toUpperCase()}`
+  const secret = info.line === 'posta-secreta'
+  const reference = `${secret ? 'PS' : 'PL'}-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${randomBytes(3).toString('hex').toUpperCase()}`
 
   const order: OrderEmailData = {
     reference,
@@ -59,6 +67,7 @@ export async function recordOrder(session: CheckoutSession, info: PurchaseInfo) 
     data: {
       reference,
       status: 'new',
+      productLine: info.line,
       variant: order.variant,
       amount: order.amount,
       currency: order.currency,
@@ -84,7 +93,7 @@ export async function recordOrder(session: CheckoutSession, info: PurchaseInfo) 
 
   if (order.email) {
     try {
-      await payload.sendEmail({ to: order.email, replyTo: COMPANY.email, ...orderCustomerEmail(order) })
+      await payload.sendEmail({ to: order.email, replyTo: COMPANY.email, ...(secret ? postaSecretaCustomerEmail(order) : orderCustomerEmail(order)) })
       customerEmailSent = true
     } catch (error) {
       payload.logger.error({ err: error }, `[posta-lunii] emailul de confirmare pentru ${reference} nu a plecat`)
@@ -92,7 +101,7 @@ export async function recordOrder(session: CheckoutSession, info: PurchaseInfo) 
   }
   try {
     const adminUrl = absoluteUrl(`/admin/collections/orders/${doc.id}`)
-    await payload.sendEmail({ to: ADMIN_EMAIL, replyTo: order.email ?? undefined, ...orderAdminEmail(order, adminUrl) })
+    await payload.sendEmail({ to: ADMIN_EMAIL, replyTo: order.email ?? undefined, ...(secret ? postaSecretaAdminEmail(order, adminUrl) : orderAdminEmail(order, adminUrl)) })
     adminEmailSent = true
   } catch (error) {
     payload.logger.error({ err: error }, `[posta-lunii] notificarea de comandă ${reference} nu a plecat`)

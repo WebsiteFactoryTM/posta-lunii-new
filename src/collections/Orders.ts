@@ -12,7 +12,7 @@ export const Orders: CollectionConfig = {
   admin: {
     useAsTitle: 'reference',
     group: 'Comenzi',
-    defaultColumns: ['reference', 'name', 'variant', 'amount', 'status', 'createdAt'],
+    defaultColumns: ['reference', 'productLine', 'name', 'variant', 'amount', 'status', 'createdAt'],
     description: 'Comenzi noi primite prin Stripe. Plățile lunare următoare ale abonamentelor se văd în Stripe.',
   },
   defaultSort: '-createdAt',
@@ -40,6 +40,18 @@ export const Orders: CollectionConfig = {
             { label: 'Anulată / rambursată', value: 'cancelled' },
           ],
         },
+      ],
+    },
+    {
+      // Din metadata Stripe `linie` (sau din referința butonului de pe site).
+      name: 'productLine',
+      type: 'select',
+      label: 'Produs',
+      defaultValue: 'posta-lunii',
+      admin: { readOnly: true },
+      options: [
+        { label: 'Poșta Lunii', value: 'posta-lunii' },
+        { label: 'Poșta Secretă', value: 'posta-secreta' },
       ],
     },
     {
