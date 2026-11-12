@@ -128,7 +128,7 @@ export function Pricing({ pricing, deadline }: Props) {
           <Image src="/assets/paw.webp" alt="" width={400} height={395} sizes="26px" />
           {pricing.note}
         </p>
-        <PricingViewContent sectionId="preturi" />
+        <PricingViewContent sectionId="preturi" line="posta-lunii" />
       </div>
     </section>
   )

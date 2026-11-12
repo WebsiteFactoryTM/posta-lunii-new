@@ -61,7 +61,8 @@ export function PlanCheckout({ plan }: Props) {
           }
 
           trackMeta('InitiateCheckout', {
-            content_name: variant.name,
+            content_name: `Poșta Lunii – ${variant.name}`,
+            content_category: 'posta-lunii',
             content_type: 'product',
             content_ids: [variant.key],
             num_items: 1,

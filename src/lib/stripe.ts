@@ -157,12 +157,11 @@ export function purchaseInfo(session: CheckoutSession, line?: ProductLine): Purc
     currency: (session.currency ?? 'ron').toUpperCase(),
     variant,
     line: productLine,
+    // Ambele linii încep cu numele produsului, ca evenimentele Meta (și emailurile) să le deosebească.
     contentName:
       productLine === 'posta-secreta'
         ? `${PRODUCT_LINES['posta-secreta']} – ${secretPlan?.name ?? 'abonament'}`
-        : variant
-          ? VARIANTS[variant]
-          : 'abonament',
+        : `${PRODUCT_LINES['posta-lunii']} – ${variant ? VARIANTS[variant] : 'abonament'}`,
     contentId: secretPlan?.planKey ?? variant ?? 'abonament',
     ref,
   }

@@ -3,8 +3,9 @@
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useRef } from 'react'
 
-import { VARIANTS } from '@/lib/checkout'
+import { PRODUCT_LINES, VARIANTS, type ProductLine } from '@/lib/checkout'
 import { onMetaPixelReady, trackMeta } from '@/lib/meta-pixel'
+import { POSTA_SECRETA_PLANS } from '@/lib/posta-secreta-plans'
 
 /**
  * PageView la fiecare navigare client-side din Next.js. Primul PageView (la
@@ -37,8 +38,14 @@ export function MetaPageViews() {
   )
 }
 
+/** Ce produse arată secțiunea de prețuri a fiecărei linii. */
+const PRICING_CONTENT: Record<ProductLine, string[]> = {
+  'posta-lunii': Object.keys(VARIANTS),
+  'posta-secreta': Object.keys(POSTA_SECRETA_PLANS),
+}
+
 /** ViewContent o singură dată, când secțiunea cu prețuri ajunge în ecran. */
-export function PricingViewContent({ sectionId }: { sectionId: string }) {
+export function PricingViewContent({ sectionId, line }: { sectionId: string; line: ProductLine }) {
   useEffect(() => {
     const section = document.getElementById(sectionId)
     if (!section) return
@@ -46,10 +53,10 @@ export function PricingViewContent({ sectionId }: { sectionId: string }) {
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return
         const sent = trackMeta('ViewContent', {
-          content_name: 'Abonamente Poșta Lunii',
-          content_category: 'Prețuri',
+          content_name: `Abonamente ${PRODUCT_LINES[line]}`,
+          content_category: line,
           content_type: 'product',
-          content_ids: Object.keys(VARIANTS),
+          content_ids: PRICING_CONTENT[line],
           currency: 'RON',
         })
         // Fără acord pentru marketing nu se trimite nimic; observăm mai departe,
@@ -60,7 +67,7 @@ export function PricingViewContent({ sectionId }: { sectionId: string }) {
     )
     observer.observe(section)
     return () => observer.disconnect()
-  }, [sectionId])
+  }, [sectionId, line])
 
   return null
 }
@@ -70,6 +77,7 @@ type PurchaseProps = {
   value: number
   currency: string
   contentName: string
+  contentCategory: ProductLine
   contentId: string
 }
 
@@ -95,7 +103,7 @@ function markSent(eventId: string) {
  * de webhook prin Conversions API (deduplicare). Se trimite o singură dată per
  * browser: la refresh nu mai pleacă.
  */
-export function MetaPurchase({ eventId, value, currency, contentName, contentId }: PurchaseProps) {
+export function MetaPurchase({ eventId, value, currency, contentName, contentCategory, contentId }: PurchaseProps) {
   useEffect(() => {
     return onMetaPixelReady(() => {
       if (alreadySent(eventId)) return
@@ -105,6 +113,7 @@ export function MetaPurchase({ eventId, value, currency, contentName, contentId 
           value,
           currency,
           content_name: contentName,
+          content_category: contentCategory,
           content_type: 'product',
           content_ids: [contentId],
           num_items: 1,
@@ -113,7 +122,7 @@ export function MetaPurchase({ eventId, value, currency, contentName, contentId 
       )
       if (sent) markSent(eventId)
     })
-  }, [eventId, value, currency, contentName, contentId])
+  }, [eventId, value, currency, contentName, contentCategory, contentId])
 
   return null
 }

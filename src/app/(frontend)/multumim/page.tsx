@@ -80,6 +80,7 @@ export default async function ThankYouPage({ searchParams }: Props) {
           value={info.value}
           currency={info.currency}
           contentName={info.contentName}
+          contentCategory={info.line}
           contentId={info.contentId}
         />
       ) : null}

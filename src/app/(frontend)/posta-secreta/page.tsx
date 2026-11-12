@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { Header } from '@/components/Header'
+import { PricingViewContent } from '@/components/MetaPixelEvents'
 import { MobileMenu } from '@/components/MobileMenu'
 import { Footer } from '@/components/Footer'
 import { BenefitIcon } from '@/components/posta-secreta/BenefitIcon'
@@ -241,6 +242,7 @@ export default async function PostaSecretaPage() {
               />
               <p>{pricing.deliveryNote.text}</p>
             </div>
+            <PricingViewContent sectionId={pricing.id} line="posta-secreta" />
           </div>
         </section>
       </main>

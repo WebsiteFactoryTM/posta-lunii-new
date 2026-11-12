@@ -63,6 +63,7 @@ function CheckoutLink({
         const plan = POSTA_SECRETA_PLANS[planKey]
         trackMeta('InitiateCheckout', {
           content_name: `Poșta Secretă – ${plan.name}`,
+          content_category: 'posta-secreta',
           content_type: 'product',
           content_ids: [planKey],
           num_items: 1,
