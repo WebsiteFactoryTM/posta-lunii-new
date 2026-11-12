@@ -52,14 +52,21 @@ export async function POST(request: Request) {
 
   // 2. Meta Conversions API — doar dacă clientul a acceptat cookie-urile de marketing
   //    pe site (informația vine din client_reference_id, pus la click pe „Comandă”).
+  //    Fiecare rezultat apare și în răspuns (vizibil în Stripe → Webhooks), și în logurile Vercel.
+  const orderStatus = order.created ? 'created' : 'exists'
   if (!info.ref?.marketing) {
-    return json({ received: true, order: order.created ? 'created' : 'exists', meta: 'skipped: no marketing consent' })
+    console.info(`[posta-lunii] Purchase ${info.eventId}: fără acord de marketing (ref: ${session.client_reference_id ?? 'lipsă'}), nu se trimite la Meta`)
+    return json({ received: true, order: orderStatus, meta: 'skipped: no marketing consent' })
   }
 
   try {
     const result = await sendPurchaseToMeta(session, info)
-    if (!result.sent) console.warn(`[posta-lunii] Purchase ${info.eventId} netrimis la Meta: ${result.reason}`)
-    return json({ received: true, order: order.created ? 'created' : 'exists', meta: result.sent })
+    if (!result.sent) {
+      console.error(`[posta-lunii] Purchase ${info.eventId} netrimis la Meta: ${result.reason}`)
+      return json({ received: true, order: orderStatus, meta: `skipped: ${result.reason}` })
+    }
+    console.info(`[posta-lunii] Purchase ${info.eventId} trimis la Meta (${info.line}): ${JSON.stringify(result.response)}`)
+    return json({ received: true, order: orderStatus, meta: result.response })
   } catch (error) {
     // 500 → Stripe reîncearcă; Meta deduplică după event_id, iar comanda nu se dublează.
     console.error(`[posta-lunii] Purchase ${info.eventId}: eroare Meta CAPI`, error)
