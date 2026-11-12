@@ -111,6 +111,9 @@ export function PostaSecretaPricing({ checkoutUrls }: Props) {
             height={single.decoration.height}
             sizes="72px"
           />
+          <p className="ps-eyebrow ps-price-card__line">
+            <span>Poșta Secretă ·</span> <span>pentru copii</span>
+          </p>
           <h3>{single.title}</h3>
           <p className="ps-small">{single.subtitle}</p>
           <p className="ps-price-amount">
@@ -133,6 +136,9 @@ export function PostaSecretaPricing({ checkoutUrls }: Props) {
 
         <article className="ps-price-card ps-price-card--featured pl-reveal" style={{ ['--rd' as string]: '.12s' }}>
           <span className="ps-tag">{subscription.badge}</span>
+          <p className="ps-eyebrow ps-price-card__line">
+            <span>Poșta Secretă ·</span> <span>pentru copii</span>
+          </p>
           <h3>{subscription.title}</h3>
           <p className="ps-small">{subscription.toggleLabel}</p>
           <div className="ps-toggle" role="group" aria-label={subscription.toggleLabel}>

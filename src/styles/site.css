@@ -169,6 +169,8 @@
 .pl-section--warm { background: var(--paper-200); }
 .pl-section__head { text-align: center; max-width: 720px; margin: 0 auto 64px; }
 .pl-section__head .pl-eyebrow { color: var(--brick-600); margin: 0 0 14px; }
+.pl-section__aside { margin: 16px 0 0; font-size: 15px; color: var(--ink-600); }
+.pl-section__aside a { color: var(--ink-900); text-underline-offset: 3px; white-space: nowrap; }
 
 /* ---------- Envelope items (Ce găsești în plic) ---------- */
 .pl-items { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; align-items: start; max-width: 1080px; margin: 0 auto; }
@@ -264,6 +266,7 @@
   box-shadow: 0 0 0 1px var(--line) inset, 0 1px 2px rgba(60,40,20,.06), 0 10px 30px -14px rgba(60,40,20,.2);
   transition: transform .5s var(--ease), box-shadow .5s var(--ease); }
 .pl-plan:hover { transform: translateY(-6px); }
+.pl-plan__line { margin: 0 0 8px !important; font-size: 12px; font-weight: 600; line-height: 1.4; letter-spacing: .14em; text-transform: uppercase; color: var(--brick-600); }
 .pl-plan__name { margin: 0; font-family: var(--serif); font-variation-settings: "SOFT" 100, "opsz" 24; font-weight: 500; font-size: 24px; line-height: 1.25; }
 .pl-plan__price { display: flex; align-items: baseline; gap: 10px; margin: 0; }
 .pl-plan__price b { font-family: var(--serif); font-variation-settings: "SOFT" 100, "opsz" 144; font-weight: 420; font-size: 60px; line-height: 1; letter-spacing: -.02em; }
@@ -658,16 +661,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 .pl-xlink__icon { flex: none; width: 24px; height: 24px; object-fit: contain; }
-.pl-xlink__note { font-weight: 400; letter-spacing: 0; }
 .pl-xlink:hover { transform: translateY(-2px); }
 .pl-xlink:focus-visible { outline: 3px solid var(--night-700); outline-offset: 3px; }
 .pl-xlink--secreta { background: var(--paper-50); box-shadow: 0 0 0 1.5px var(--olive-500) inset, 0 6px 16px -10px rgba(86,96,58,.6); }
 .pl-header__nav .pl-xlink--secreta, .pl-xlink--secreta { color: var(--olive-700); }
-.pl-xlink--secreta .pl-xlink__note { color: var(--ink-600); }
 .pl-xlink--secreta:hover { background: #fff; box-shadow: 0 0 0 1.5px var(--olive-700) inset, 0 10px 22px -10px rgba(86,96,58,.7); }
 .pl-xlink--lunii { background: var(--night-900); box-shadow: 0 6px 16px -10px rgba(27,24,54,.8); }
 .pl-header__nav .pl-xlink--lunii, .pl-xlink--lunii { color: var(--on-night); }
-.pl-xlink--lunii .pl-xlink__note { color: var(--moon-300); }
 .pl-xlink--lunii:hover { box-shadow: 0 0 0 1px rgba(212,168,87,.45), 0 10px 26px -8px rgba(212,168,87,.55); }
 .pl-header__nav .pl-xlink:hover { color: inherit; }
 /* Iconița „se trezește” din când în când, ca pastila să fie observată. */
@@ -677,9 +677,12 @@
 @keyframes pl-xlink-nudge-now { 0%, 100% { transform: none; } 25% { transform: rotate(-12deg); } 55% { transform: rotate(9deg); } 80% { transform: rotate(-4deg); } }
 .pl-xlink--menu { width: 100%; justify-content: center; min-height: 52px; margin-top: 14px; font-size: 14px; }
 
-@media (max-width: 1040px) { .pl-header__nav .pl-xlink__note { display: none; } }
 @media (max-width: 860px) {
   /* Pe mobil linkurile din bară dispar, dar pastila rămâne, lângă hamburger. */
   .pl-header__nav .pl-xlink { display: inline-flex; min-height: 38px; margin-right: 42px; padding: 0 14px 0 7px; font-size: 12.5px; }
   .pl-header__nav .pl-xlink__icon { width: 22px; height: 22px; }
+}
+/* Pe 360px pastila se strânge, dar eticheta rămâne întreagă. */
+@media (max-width: 380px) {
+  .pl-header__nav .pl-xlink { gap: 6px; margin-right: 38px; padding: 0 11px 0 6px; font-size: 12px; letter-spacing: .01em; }
 }

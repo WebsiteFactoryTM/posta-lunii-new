@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { LandingContent } from '@/lib/content'
 import type { OrderDeadline } from '@/lib/order-deadline'
 import { PricingViewContent } from './MetaPixelEvents'
@@ -35,6 +36,9 @@ export function Pricing({ pricing, deadline }: Props) {
           <h2 id="pret-title" className="pl-h2">
             {pricing.title}
           </h2>
+          <p className="pl-section__aside">
+            Cauți scrisorile pentru copii? <Link href="/posta-secreta">Vezi Poșta Secretă →</Link>
+          </p>
         </div>
 
         <TermsGate>
@@ -50,7 +54,10 @@ export function Pricing({ pricing, deadline }: Props) {
                   style={style}
                 >
                   {plan.badge ? <span className="pl-badge">{plan.badge}</span> : null}
-                  <h3 className="pl-plan__name">{plan.name}</h3>
+                  <div>
+                    <p className="pl-plan__line">Poșta Lunii · pentru adulți</p>
+                    <h3 className="pl-plan__name">{plan.name}</h3>
+                  </div>
                   <p className="pl-plan__price">
                     <b>{plan.price}</b>
                     {plan.priceSuffix ? <span>{plan.priceSuffix}</span> : null}

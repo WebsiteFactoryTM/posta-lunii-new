@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { Header } from '@/components/Header'
 import { MobileMenu } from '@/components/MobileMenu'
@@ -223,6 +224,9 @@ export default async function PostaSecretaPage() {
             <h2 id="ps-pricing-title" className="ps-h2 ps-center pl-reveal">
               {pricing.title}
             </h2>
+            <p className="ps-small ps-center ps-pricing-aside pl-reveal">
+              Cauți scrisorile pentru adulți? <Link href="/">Vezi Poșta Lunii →</Link>
+            </p>
 
             <PostaSecretaPricing checkoutUrls={getPostaSecretaCheckoutUrls()} />
 

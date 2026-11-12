@@ -4,7 +4,8 @@ import Link from 'next/link'
 /**
  * Pastila care leagă cele două produse: de pe Poșta Lunii spre Poșta Secretă
  * și invers. Stă în header (vizibilă și pe mobil, lângă hamburger) și în
- * meniul de pe mobil.
+ * meniul de pe mobil. Eticheta spune pentru cine e produsul și rămâne întreagă
+ * pe orice ecran, ca produsul pentru copii să nu fie confundat cu cel pentru adulți.
  */
 
 export type CrossLinkKind = 'secreta' | 'lunii'
@@ -12,14 +13,12 @@ export type CrossLinkKind = 'secreta' | 'lunii'
 const LINKS = {
   secreta: {
     href: '/posta-secreta',
-    label: 'Poșta Secretă',
-    note: 'pentru copii',
+    label: 'Poștă Copii',
     icon: { src: '/posta-secreta/ciuperci.webp', width: 324, height: 360 },
   },
   lunii: {
     href: '/',
-    label: 'Poșta Lunii',
-    note: 'pentru tine',
+    label: 'Poștă Adulți',
     icon: { src: '/assets/moon-crescent.webp', width: 541, height: 549 },
   },
 } as const
@@ -43,7 +42,6 @@ export function CrossLink({ kind, className = '', onClick, tabIndex }: Props) {
     >
       <Image className="pl-xlink__icon" src={link.icon.src} alt="" aria-hidden="true" width={link.icon.width} height={link.icon.height} sizes="24px" />
       <span className="pl-xlink__label">{link.label}</span>
-      <span className="pl-xlink__note">{link.note}</span>
     </Link>
   )
 }
